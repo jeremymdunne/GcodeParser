@@ -77,13 +77,19 @@ _command_t newCommand(){
   command.g = GCODE_INT_NO_VALUE;
   command.n = GCODE_LONG_NO_VALUE;
 
-  return command; 
+  return command;
+}
+
+void commandToString(_command_t *command, char* str){
+  // TODO 
 }
 
 
 typedef enum{
   GCODE_PARSER_OK = 0,
-  GCODE_PARSER_BAD_PARSE
+  GCODE_PARSER_BAD_PARSE,
+  GCODE_PARSER_UNSUPORTED_MODAL
+
 } _gcode_paraser_state_t;
 
 class GcodeParser {
@@ -112,11 +118,29 @@ class GcodeParser {
 
     _gcode_paraser_state_t getState();
 
+    bool checkFloatValue(float value){return !(value == GCODE_FLOAT_NO_VALUE);}
+    bool checkIntValue(float value){return !(value == GCODE_INT_NO_VALUE);}
+    bool checkLongValue(float value){return !(value == GCODE_LONG_NO_VALUE);}
+
+
+
   private:
 
     _gcode_modal_t _modal_state;      /**< Running modal state of the Gcode. */
+    _gcode_paraser_state_t _state;      /**< Running state of the parser. */
 
+    /**
+     * @breif Updates the Modal State based on a command.
+     * @details Updates _modal_state variable based on the contents of the command.
+     * @param command _command_t* to parse and update modal from.
+     */
+    void updateModalState(_command_t* command);
+    /**
+     * @breif Parse a line for the command contents.
+     * @details Parses a line and extracts the command.
+     */
     void parseCommand(char* line, uint8_t length, _command_t* command);
+
     void parseModal(char* line, uint8_t length, _gcode_modal_t* modal);
 
     /**

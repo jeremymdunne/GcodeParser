@@ -31,79 +31,163 @@ void GcodeParser::parseLine(char* line, uint8_t length, _gcode_modal_t* modal, _
   // from the command, update the modal state if necessary
   _command_t parsed_command = newCommand();
   // iterate through constructing each leter as found
-
-
-  char field;
-  float value;
-  int end;
-  uint8_t i = 0;
-  while(i < length - 1){
-    end = parseField(&line[i], length - i, &field, &value);
-    if(end != 0){
-      switch(field){
-        case('A'):
-          parsed_command.a = value;
-          break;
-        case('B'):
-          parsed_command.b = value;
-          break;
-        case('C'):
-          parsed_command.c = value;
-          break;
-        case('X'):
-          parsed_command.x = value;
-          break;
-        case('Y'):
-          parsed_command.y = value;
-          break;
-        case('Z'):
-          parsed_command.z = value;
-          break;
-        case('I'):
-          parsed_command.i = value;
-          break;
-        case('J'):
-          parsed_command.j = value;
-          break;
-        case('K'):
-          parsed_command.k = value;
-          break;
-
-        case('F'):
-          parsed_command.f = value;
-          break;
-        case('S'):
-          parsed_command.s = value;
-          break;
-        case('P'):
-          parsed_command.p = (unsigned int)value;
-          break;
-        case('R'):
-          parsed_command.r = value;
-          break;
-        case('T'):
-          parsed_command.t = value;
-          break;
-        case('N'):
-          parsed_command.n = value;
-          break;
-        case('M'):
-          parsed_command.m = (uint8_t)value;
-          break;
-        case('G'):
-          parsed_command.g = (uint8_t)value;
-          break;
-      }
-    }
-    i += end;
-  }
-
+  parseCommand(line, length, &parsed_command);
   // quick copy
-  parsed_command.y = GCODE_FLOAT_NO_VALUE;
   memcpy(command, &parsed_command, sizeof(_command_t));
   // std::cout << "Field: " << field << " Value: " << value << std::endl;
+}
+
+void GcodeParser::parseCommand(char* line, uint8_t length, _command_t* command){
+    // go through the line and parse all fields
+    char field;
+    float value;
+    int end;
+    uint8_t i = 0;
+    while(i < length - 1){
+      end = parseField(&line[i], length - i, &field, &value);
+      if(end != 0){
+        switch(field){
+          case('A'):
+            command->a = value;
+            break;
+          case('B'):
+            command->b = value;
+            break;
+          case('C'):
+            command->c = value;
+            break;
+          case('X'):
+            command->x = value;
+            break;
+          case('Y'):
+            command->y = value;
+            break;
+          case('Z'):
+            command->z = value;
+            break;
+          case('I'):
+            command->i = value;
+            break;
+          case('J'):
+            command->j = value;
+            break;
+          case('K'):
+            command->k = value;
+            break;
+          case('F'):
+            command->f = value;
+            break;
+          case('S'):
+            command->s = value;
+            break;
+          case('P'):
+            command->p = (unsigned int)value;
+            break;
+          case('R'):
+            command->r = value;
+            break;
+          case('T'):
+            command->t = value;
+            break;
+          case('N'):
+            command->n = value;
+            break;
+          case('M'):
+            command->m = (uint8_t)value;
+            break;
+          case('G'):
+            command->g = (uint8_t)value;
+            break;
+        }
+      }
+      i += end;
+    }
+}
 
 
+void GcodeParser::updateModalState(_command_t* command){
+  // check for M and G states
+  if(command->m != GCODE_INT_NO_VALUE){
+    switch(command->m){
+      // M Group 4
+      case(0):
+        _modal_state.m_group_4 = 0;
+        break;
+      case(1):
+        _modal_state.m_group_4 = 1;
+        break;
+      // M Group 6
+
+      // M Group 7
+      case(3):
+        _modal_state.m_group_7 = 3;
+        break;
+      case(4):
+        _modal_state.m_group_7 = 4;
+        break;
+      case(5):
+        _modal_state.m_group_7 = 5;
+        break;
+
+      // M Group 8
+
+      // M Group 9
+    }
+  }
+  else if(command->g != GCODE_INT_NO_VALUE){
+    switch(command->g){
+      // G Group 1
+      case(0):
+        _modal_state.g_group_1 = 0;
+        break;
+      case(1):
+        _modal_state.g_group_1 = 1;
+        break;
+      case(2):
+        _modal_state.g_group_1 = 2;
+        break;
+      case(3):
+        _modal_state.g_group_1 = 3;
+        break;
+
+      // G Group 2
+      case(17):
+        _modal_state.g_group_2 = 17;
+        break;
+      case(18):
+        _modal_state.g_group_2 = 18;
+        break;
+      case(19):
+        _modal_state.g_group_2 = 19;
+        break;
+
+      // G Group 3
+      case(90):
+        _modal_state.g_group_3 = 90;
+        break;
+      case(91):
+        _modal_state.g_group_3 = 91;
+        break;
+
+      // G Group 5
+      case(20):
+        _modal_state.g_group_5 = 20;
+        break;
+      case(21):
+        _modal_state.g_group_5 = 21;
+        break;
+
+      // G Group 7
+
+      // G Group 8
+
+      // G Group 10
+
+      // G Group 12
+
+      // G Group 13
+    }
+  }
 }
 
 int GcodeParser::parseField(char* line, uint8_t length, char* letter, float* value){
